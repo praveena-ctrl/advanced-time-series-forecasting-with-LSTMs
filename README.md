@@ -3,93 +3,214 @@ This repository  implementation of a sophisticated time series forecasting solut
 This repository contains a Jupyter Notebook implementing an **LSTM (Long Short-Term Memory) neural network** for time-series forecasting using **TensorFlow**. The project demonstrates data preprocessing, model training, evaluation, and visualization of predictions.
 
 ---
-Attention-Based LSTM for Time Series Prediction
-Overview
-This Jupyter Notebook implements and trains a deep learning model for time series forecasting. The model utilizes an LSTM layer to capture temporal dependencies, coupled with a custom Attention Layer to selectively focus on the most relevant parts of the input sequence for making the final prediction.
+Project Overview
+This project focuses on building a fully optimized and interpretable LSTM-based deep learning model for multivariate time series forecasting. The workflow covers:
 
-Dependencies and Setup
-The following Python libraries are required (installed within the notebook):
+Generating a complex synthetic economic-like dataset with trend, noise, seasonal cycles, autoregressive dependencies, and multiple exogenous variables.
 
-tensorflow (for the deep learning model)
+Designing and training an advanced LSTM architecture that incorporates:
 
-numpy (for data manipulation)
+AdamW optimizer
 
-pandas (for data frame operations)
+Cosine annealing learning rate scheduler
 
-matplotlib (for plotting and visualization)
+Dropout scheduling (dynamic dropout increase during training)
 
-scikit-learn (for data splitting and evaluation metrics)
+Weight decay
 
-The notebook automatically creates the following output directory structure:
+Benchmarking against baseline forecasting models:
 
-outputs/logs
+SARIMA (Seasonal ARIMA)
 
-outputs/models
+Feedforward Neural Network (FFNN) with flattened lag features
 
-outputs/predictions
+Conducting interpretability analysis using permutation-based feature importance for sequence models.
 
-outputs/plots
+The final deliverables include dataset, code, metrics, and interpretability reports.
 
-Data
-The dataset is synthetically generated using a sinusoidal function with added Gaussian noise.
+Dataset Description 2.1 Data Generation
+The dataset is programmatically generated using:
 
-Task: Predict the next value in the sequence based on the preceding 50 time steps.
+Daily timestamps for 2000 days
 
-Total Samples: 5,000
+Components such as:
 
-Sequence Length: 50 time steps (seq_len=50)
+Long-term trend
 
-Splitting: The data is split into an 80% training set (4,000 samples) and a 20% validation set (1,000 samples).
+Yearly seasonal pattern
 
-Saved Files:
+Weekly seasonal pattern
 
-outputs/X_data.npy (Input features)
+Autoregressive signals (AR(2))
 
-outputs/y_data.npy (Target values)
+Exogenous variables (exog1, exog2, exog3)
 
-outputs/predictions/dataset_preview.csv (A small preview of the generated targets)
+Gaussian noise
 
-Model Architecture
-The model is a sequential recurrent neural network with a custom attention mechanism:
+2.2 Features Included Feature Description target Main variable to be forecasted exog1 Seasonal exogenous driver (90-day cycle) exog2 Faster exogenous cycle (30-day cosine) exog3 Random noise-driven exogenous variable trend Linear upward trend seasonal_yearly Long periodic component seasonal_weekly Weekly periodic component lag_1 ... lag_14 Lagged historical observations
 
-Input Layer: Takes sequences of shape (50,).
+Minimum observations: 2000 rows Saved file: lstm_timeseries_dataset.csv
 
-ExpandDimsLayer: A custom layer to reshape the input to (50, 1) for the LSTM.
+Problem Statement
+To build a high-performance forecasting model capable of learning long-sequence temporal patterns while maintaining interpretability.
 
-LSTM Layer: A recurrent layer with 64 units, returning sequences.
+Key objectives:
 
-AttentionLayer: A custom layer that calculates a context vector by applying softmax-based attention weights to the LSTM output sequence. It outputs both the context vector and the attn_weights.
+Predict future values of a non-stationary, seasonal time series.
 
-Output Layer: A final Dense(1) layer on the context vector for the prediction.
+Compare deep learning with classical models.
 
-The model is compiled using the Adam optimizer and Mean Squared Error (MSE) loss.
+Understand which features influence the forecast using explainable AI (XAI) methods.
 
-Training and Results
-The model is trained for 50 epochs using a batch size of 32.
+Methodology & Approach 4.1 Data Preprocessing
+Normalization using StandardScaler.
 
-Callbacks: Training uses ModelCheckpoint to save the best model based on validation loss, and EarlyStopping with a patience of 5 epochs.
+Creation of sequence windows with sequence length = 30.
 
-Best Model: The best model is saved to outputs/models/best_model.h5.
+Time-based train-validation-test split:
 
-Evaluation Metrics (on Validation Data)
-After training, the model achieves the following performance metrics on the validation set:
+70% Train
 
-Mean Squared Error (MSE): 0.0029
+10% Validation
 
-Mean Absolute Error (MAE): 0.0432
+20% Test
 
-R-squared (R2 Score): 0.7610
+Model Architectures 5.1 LSTM Forecasting Model (Primary Model)
+Key features:
 
-Correlation (Actual vs. Predicted): 0.8829
+2-layer LSTM architecture
 
-Visualization Outputs
-The notebook saves several plots to the outputs/plots/ directory, including:
+Hidden size = 128
 
-Training loss curve.
+Dropout applied to:
 
-Scatter plot of actual vs. predicted values.
+LSTM layers
 
-A visualization of actual vs. predicted values over the validation set (val_predictions_visualization.png).
+Fully-connected layers
 
-A stem plot showing the attention weights for a specific sample (attention_sample0.png).
+Final prediction layer: Dense(64 → 1)
+
+5.2 Advanced Optimization Techniques AdamW Optimizer
+
+Decoupled weight decay
+
+More stable and generalizable than Adam
+
+Cosine Annealing LR Scheduler
+
+Smoothly decreases learning rate across training epochs.
+
+Dropout Scheduling
+
+A custom function increases dropout probability as training progresses:
+
+initial_dropout = 0.1 final_dropout = 0.5
+
+This helps:
+
+Prevent overfitting
+
+Encourage more robust temporal pattern learning
+
+Baseline Models 6.1 SARIMA
+Captures seasonal components
+
+Implemented using Statsmodels
+
+Used as classical statistical benchmark
+
+6.2 Feedforward Neural Network (FFNN)
+
+Uses flattened lag features
+
+Non-sequential model
+
+Helps compare how sequence models outperform simple networks
+
+Evaluation Metrics
+Models are evaluated using:
+
+RMSE (Root Mean Squared Error)
+
+MAE (Mean Absolute Error)
+
+MAPE (%)
+
+These metrics allow fair comparison between models with different assumptions.
+
+Interpretability Analysis 8.1 Permutation Importance (Sequence-Specific)
+Each feature is permuted across test sequences while maintaining temporal order.
+
+Interpretation:
+
+Increase in RMSE = feature importance
+
+Higher RMSE change → More crucial feature
+
+This helps identify:
+
+Which exogenous variables matter
+
+Whether lags or seasonality components dominate prediction
+
+How the LSTM internally relies on temporal dependencies
+
+Results Summary (Typical Observations)
+Expected behavior:
+
+LSTM performs significantly better than FFNN and SARIMA due to sequence modeling ability.
+
+Exog variables and lag features show strong importance in permutation tests.
+
+SARIMA may struggle due to nonlinearities and noise.
+
+FFNN performs reasonably but cannot model long temporal patterns.
+
+Computational Resources
+Typical requirements:
+
+CPU: 4–8 cores
+
+RAM: 4–8 GB minimum
+
+GPU (optional but recommended): RTX 1650 or better
+
+Training times:
+
+CPU-only: 10–20 minutes
+
+GPU: 3–8 minutes
+
+File Structure Project/ │ ├── Advanced_LSTM_Forecasting_Project.py # Full project code ├── lstm_timeseries_dataset.csv # Auto-generated dataset ├── README.md # Project documentation └── /outputs (optional)
+
+How to Run the Project Step 1: Install dependencies pip install numpy pandas matplotlib scikit-learn torch statsmodels
+
+Step 2: Run the script python Advanced_LSTM_Forecasting_Project.py
+
+Step 3: Outputs
+
+The script will display:
+
+LSTM performance metrics
+
+Baseline model metrics
+
+Feature importances
+
+Dataset saved to CSV
+
+Conclusion
+This project demonstrates a full end-to-end implementation of:
+
+Time series data simulation
+
+Deep learning sequence modeling
+
+Model optimization
+
+Statistical baselines
+
+Modern interpretability techniques
+
+It serves as a strong final-year, research, or professional portfolio project showcasing advanced machine learning and deep learning skills.# Advanced-Time-Series-Forecasting-with-Deep-Learning-LSTM-Optimization-and-Interpretability
 
